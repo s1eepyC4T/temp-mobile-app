@@ -1,0 +1,7 @@
+name = "photo-gallery-worker"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Environment variables are set in the Cloudflare Dashboard, NOT here,
+# because they contain secrets (GITHUB_TOKEN, UPLOAD_SECRET).
+# Dashboard → Workers → photo-gallery-worker → Settings → Variables

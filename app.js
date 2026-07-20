@@ -55,11 +55,13 @@ async function init() {
 function showSetup() {
   setupScreen.classList.remove('hidden');
   appScreen.classList.add('hidden');
+  stopAutoRefresh();
 }
 
 function showApp() {
   setupScreen.classList.add('hidden');
   appScreen.classList.remove('hidden');
+  startAutoRefresh();
 }
 
 // ─── Token setup ─────────────────────────────────────────────────────────────
@@ -421,6 +423,46 @@ document.addEventListener('touchend', async (e) => {
     isPulling = false;
   }
 }, { passive: true });
+
+// ─── Auto-refresh: poll for new photos every 30s when app is visible ──────────
+let autoRefreshTimer = null;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(async () => {
+    if (!document.hidden && githubToken) {
+      await silentRefresh();
+    }
+  }, 30000);
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+}
+
+async function silentRefresh() {
+  try {
+    const photos = await fetchPhotosList();
+    const currentItems = galleryGrid.querySelectorAll('.gallery-item');
+    const currentCount = currentItems.length;
+    if (photos.length > currentCount) {
+      renderGallery(photos);
+      showSuccess(`${photos.length - currentCount} new photo${photos.length - currentCount > 1 ? 's' : ''} synced`);
+    }
+  } catch {
+    // silent — don't interrupt user
+  }
+}
+
+// Restart polling when app becomes visible again (user switches back)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && githubToken) {
+    silentRefresh();
+  }
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 init();
