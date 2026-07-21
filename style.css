@@ -849,7 +849,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ─── Bottom tab bar ────────────────────────────────────────────────────────── */
+/* ─── Bottom tab bar (single tab — visually hidden, keeps safe area padding) ── */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -862,6 +862,11 @@ html, body {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 0.5px solid var(--border);
   padding-bottom: var(--safe-bottom);
+  /* Only one tab — hide the bar itself, keep safe-area space */
+  height: 0;
+  overflow: hidden;
+  border-top: none;
+  padding-bottom: 0;
 }
 
 .tab-btn {
@@ -892,7 +897,7 @@ html, body {
   color: var(--accent);
 }
 
-/* Push gallery / spending content above the tab bar */
+/* Push gallery / spending content above the FAB only (no tab bar) */
 .gallery-container,
 #tab-spending {
   padding-bottom: calc(var(--safe-bottom) + 90px);

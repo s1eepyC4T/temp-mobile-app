@@ -13,7 +13,7 @@ let githubToken  = null;
 let openaiKey    = null;
 let isUploading  = false;
 let bulkCancelled = false;
-let currentTab   = 'gallery';
+let currentTab = 'spending';
 let pendingScanData = null; // { base64, dataUrl, file }
 
 // ─── DOM: common ──────────────────────────────────────────────────────────────
@@ -97,7 +97,9 @@ async function init() {
 
   if (githubToken) {
     showApp();
-    await loadGallery();
+    // Start on Spending tab; gallery loads silently in background
+    switchTab('spending');
+    loadGallery(); // fire and forget — no await
     // First launch: auto-trigger bulk import silently if never done
     if (!localStorage.getItem('bulk_import_done')) {
       triggerBulkImport();
