@@ -14,7 +14,9 @@
 </head>
 <body>
 
-  <!-- SETUP SCREEN (shown on first launch) -->
+  <!-- ══════════════════════════════════════════════════════
+       SETUP SCREEN
+  ══════════════════════════════════════════════════════ -->
   <div id="setup-screen" class="screen hidden">
     <div class="setup-card">
       <div class="setup-icon">
@@ -23,40 +25,43 @@
         </svg>
       </div>
       <h1>Photo Gallery</h1>
-      <p class="setup-subtitle">Connect to GitHub to get started</p>
+      <p class="setup-subtitle">Connect your accounts to get started</p>
 
       <div class="form-group">
         <label for="token-input">GitHub Personal Access Token</label>
-        <input
-          type="password"
-          id="token-input"
-          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="none"
-          spellcheck="false"
-        />
+        <input type="password" id="token-input" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx"
+          autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
         <p class="hint">
-          Needs <strong>Contents</strong> read &amp; write permission on repo
-          <code>temp-mobile-app</code>.
+          Needs <strong>Contents</strong> read &amp; write on repo <code>temp-mobile-app</code>.
           <a href="https://github.com/settings/tokens?type=beta" target="_blank">Generate token</a>
         </p>
       </div>
 
-      <button id="save-token-btn" class="btn-primary">Connect</button>
+      <div class="form-group">
+        <label for="openai-key-input">OpenAI API Key <span class="optional-tag">for receipt scanning</span></label>
+        <input type="password" id="openai-key-input" placeholder="sk-proj-xxxxxxxxxxxxxxxxxxxx"
+          autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        <p class="hint">
+          Used only on your device to scan slip photos with GPT-4o Vision.
+          <a href="https://platform.openai.com/api-keys" target="_blank">Get API key</a>
+        </p>
+      </div>
 
+      <button id="save-token-btn" class="btn-primary">Connect</button>
       <div id="setup-error" class="error-msg hidden"></div>
     </div>
   </div>
 
-  <!-- MAIN APP SCREEN -->
+  <!-- ══════════════════════════════════════════════════════
+       MAIN APP SCREEN
+  ══════════════════════════════════════════════════════ -->
   <div id="app-screen" class="screen hidden">
 
-    <!-- Header -->
+    <!-- Header (dynamic per tab) -->
     <header class="app-header">
-      <h1 class="app-title">Gallery</h1>
+      <h1 class="app-title" id="app-title">Gallery</h1>
       <div class="header-actions">
-        <button id="refresh-btn" class="icon-btn" title="Refresh gallery" aria-label="Refresh gallery">
+        <button id="refresh-btn" class="icon-btn hidden" title="Refresh" aria-label="Refresh">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -72,112 +77,184 @@
       </div>
     </header>
 
-    <!-- Upload progress toast -->
+    <!-- Toasts -->
     <div id="upload-toast" class="toast hidden">
-      <div class="toast-inner">
-        <div class="spinner"></div>
-        <span id="toast-msg">Uploading...</span>
-      </div>
+      <div class="toast-inner"><div class="spinner"></div><span id="toast-msg">Uploading...</span></div>
     </div>
-
-    <!-- Success toast -->
     <div id="success-toast" class="toast success hidden">
       <div class="toast-inner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="toast-icon">
           <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span id="success-msg">Photo uploaded!</span>
+        <span id="success-msg">Done!</span>
       </div>
     </div>
 
-    <!-- First-launch bulk import banner -->
-    <div id="import-banner" class="import-banner hidden">
-      <div class="import-banner-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+    <!-- ── TAB: GALLERY ───────────────────────────────────────── -->
+    <div id="tab-gallery" class="tab-content">
+
+      <!-- First-launch bulk import banner -->
+      <div id="import-banner" class="import-banner hidden">
+        <div class="import-banner-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="import-banner-text">
+          <strong>Import existing photos</strong>
+          <span>Select photos from your Camera Roll to sync to GitHub</span>
+        </div>
+        <div class="import-banner-actions">
+          <button id="import-all-btn" class="btn-import">Import All</button>
+          <button id="import-dismiss-btn" class="btn-dismiss" aria-label="Dismiss">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk import progress -->
+      <div id="bulk-progress-screen" class="bulk-progress-screen hidden">
+        <div class="bulk-progress-card">
+          <div class="bulk-progress-header">
+            <h2>Importing Photos</h2>
+            <p id="bulk-progress-subtitle">Uploading to GitHub...</p>
+          </div>
+          <div class="bulk-progress-bar-wrap">
+            <div id="bulk-progress-bar" class="bulk-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="bulk-progress-stats">
+            <span id="bulk-count">0 / 0</span>
+            <span id="bulk-percent">0%</span>
+          </div>
+          <div id="bulk-current-file" class="bulk-current-file"></div>
+          <div class="bulk-progress-footer">
+            <div id="bulk-failed-count" class="bulk-failed hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
+                <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
+              </svg>
+              <span id="bulk-failed-text"></span>
+            </div>
+            <button id="bulk-cancel-btn" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <main class="gallery-container">
+        <div id="empty-state" class="empty-state hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>No photos yet</p>
+          <p class="empty-hint">Tap + to add photos</p>
+        </div>
+        <div id="loading-state" class="loading-state">
+          <div class="spinner large"></div>
+          <p>Loading gallery...</p>
+        </div>
+        <div id="gallery-grid" class="gallery-grid"></div>
+      </main>
+
+      <!-- FAB -->
+      <button id="add-photo-btn" class="fab" title="Add photo" aria-label="Add photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <input type="file" id="file-input" accept="image/*" multiple style="display:none" />
+      <input type="file" id="bulk-file-input" accept="image/*" multiple style="display:none" />
+    </div>
+
+    <!-- ── TAB: SPENDING ──────────────────────────────────────── -->
+    <div id="tab-spending" class="tab-content hidden">
+
+      <!-- Daily summary card -->
+      <div class="spending-summary-wrap">
+        <div class="spending-summary-card">
+          <div class="spending-summary-top">
+            <div>
+              <p class="spending-label" id="spending-date-label">Today</p>
+              <p class="spending-total" id="spending-total">฿0.00</p>
+            </div>
+            <div class="spending-badge-wrap">
+              <span class="spending-count" id="spending-count">0 slips</span>
+            </div>
+          </div>
+          <div class="spending-bar-track">
+            <div class="spending-bar-fill" id="spending-bar-fill" style="width:0%"></div>
+          </div>
+          <p class="spending-bar-label" id="spending-bar-label">No spending recorded yet</p>
+        </div>
+      </div>
+
+      <!-- No OpenAI key warning -->
+      <div id="no-openai-banner" class="no-openai-banner hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
+          <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <strong>OpenAI key not set</strong>
+          <span>Go to Settings to add your API key for receipt scanning.</span>
+        </div>
+      </div>
+
+      <!-- Slip list -->
+      <div class="slip-list-header">
+        <span id="slip-list-title">Slips scanned today</span>
+        <button id="clear-today-btn" class="btn-text-danger hidden">Clear today</button>
+      </div>
+
+      <div id="slip-empty" class="slip-empty hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round"/>
+          <polyline points="14 2 14 8 20 8" stroke-linecap="round"/>
+        </svg>
+        <p>No slips yet</p>
+        <p class="empty-hint">Tap the scan button to add a receipt</p>
+      </div>
+
+      <div id="slip-list" class="slip-list"></div>
+
+      <!-- Scan slip FAB -->
+      <button id="scan-slip-btn" class="fab fab-scan" title="Scan slip" aria-label="Scan slip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke-linecap="round"/>
+          <rect x="7" y="7" width="10" height="10" rx="1"/>
+        </svg>
+      </button>
+      <input type="file" id="slip-file-input" accept="image/*" style="display:none" />
+    </div>
+
+    <!-- Bottom tab bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="gallery" aria-label="Gallery">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="18" height="18" rx="2"/>
           <circle cx="8.5" cy="8.5" r="1.5"/>
           <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </div>
-      <div class="import-banner-text">
-        <strong>Import existing photos</strong>
-        <span>Select all photos from your Camera Roll to sync them to GitHub</span>
-      </div>
-      <div class="import-banner-actions">
-        <button id="import-all-btn" class="btn-import">Import All</button>
-        <button id="import-dismiss-btn" class="btn-dismiss" aria-label="Dismiss">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
-            <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Bulk import progress screen (shown during bulk upload) -->
-    <div id="bulk-progress-screen" class="bulk-progress-screen hidden">
-      <div class="bulk-progress-card">
-        <div class="bulk-progress-header">
-          <h2>Importing Photos</h2>
-          <p id="bulk-progress-subtitle">Uploading to GitHub...</p>
-        </div>
-
-        <div class="bulk-progress-bar-wrap">
-          <div id="bulk-progress-bar" class="bulk-progress-bar" style="width:0%"></div>
-        </div>
-
-        <div class="bulk-progress-stats">
-          <span id="bulk-count">0 / 0</span>
-          <span id="bulk-percent">0%</span>
-        </div>
-
-        <div id="bulk-current-file" class="bulk-current-file"></div>
-
-        <div class="bulk-progress-footer">
-          <div id="bulk-failed-count" class="bulk-failed hidden">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
-              <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
-            </svg>
-            <span id="bulk-failed-text"></span>
-          </div>
-          <button id="bulk-cancel-btn" class="btn-secondary">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gallery area -->
-    <main class="gallery-container">
-      <div id="empty-state" class="empty-state hidden">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
+        <span>Gallery</span>
+      </button>
+      <button class="tab-btn" data-tab="spending" aria-label="Spending">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23" stroke-linecap="round"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/>
         </svg>
-        <p>No photos yet</p>
-        <p class="empty-hint">Tap + to add photos, or use the Import banner above</p>
-      </div>
-
-      <div id="loading-state" class="loading-state">
-        <div class="spinner large"></div>
-        <p>Loading gallery...</p>
-      </div>
-
-      <div id="gallery-grid" class="gallery-grid"></div>
-    </main>
-
-    <!-- Add photo FAB -->
-    <button id="add-photo-btn" class="fab" title="Add photo" aria-label="Add photo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round"/>
-        <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"/>
-      </svg>
-    </button>
-
-    <!-- Hidden file inputs -->
-    <input type="file" id="file-input" accept="image/*" multiple style="display:none" />
-    <input type="file" id="bulk-file-input" accept="image/*" multiple style="display:none" />
+        <span>Spending</span>
+      </button>
+    </nav>
   </div>
 
   <!-- LIGHTBOX -->
@@ -192,6 +269,48 @@
     <div id="lightbox-caption"></div>
   </div>
 
+  <!-- SLIP SCAN RESULT SHEET -->
+  <div id="scan-overlay" class="overlay hidden"></div>
+  <div id="scan-sheet" class="bottom-sheet scan-sheet hidden">
+    <div class="sheet-handle"></div>
+    <div id="scan-loading" class="scan-loading hidden">
+      <div class="spinner large"></div>
+      <p>Scanning receipt with AI...</p>
+    </div>
+    <div id="scan-result" class="scan-result hidden">
+      <div class="scan-result-img-wrap">
+        <img id="scan-preview-img" src="" alt="Slip preview" />
+      </div>
+      <div class="scan-result-body">
+        <div class="scan-amount-row">
+          <span class="scan-amount-label">Amount detected</span>
+          <span class="scan-amount" id="scan-amount">฿0.00</span>
+        </div>
+        <div class="scan-merchant-row" id="scan-merchant-row">
+          <span class="scan-merchant-label">Merchant / description</span>
+          <span class="scan-merchant" id="scan-merchant">—</span>
+        </div>
+        <div class="scan-note-row">
+          <label for="scan-note-input" class="scan-note-label">Note (optional)</label>
+          <input type="text" id="scan-note-input" class="scan-note-input" placeholder="e.g. lunch, coffee..." maxlength="60"/>
+        </div>
+        <div id="scan-error-row" class="scan-error-row hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
+            <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
+          </svg>
+          <span id="scan-error-msg"></span>
+        </div>
+      </div>
+      <div class="scan-actions">
+        <button id="scan-discard-btn" class="btn-secondary">Discard</button>
+        <button id="scan-save-btn" class="btn-primary scan-save">Save to Today</button>
+      </div>
+    </div>
+    <div style="height: env(safe-area-inset-bottom, 20px);"></div>
+  </div>
+
   <!-- SETTINGS SHEET -->
   <div id="settings-overlay" class="overlay hidden"></div>
   <div id="settings-sheet" class="bottom-sheet hidden">
@@ -204,6 +323,10 @@
     <div class="settings-item">
       <span>GitHub Token</span>
       <button id="update-token-btn" class="btn-secondary small">Update</button>
+    </div>
+    <div class="settings-item">
+      <span>OpenAI API Key</span>
+      <button id="update-openai-btn" class="btn-secondary small">Update</button>
     </div>
     <div class="settings-item">
       <span>Repository</span>

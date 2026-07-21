@@ -1,4 +1,9 @@
 /* ─── Reset & Base ──────────────────────────────────────────────────────────── */
+/* Tab content switching */
+.tab-content { display: flex; flex-direction: column; }
+.tab-content.hidden { display: none !important; }
+
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -256,7 +261,7 @@ html, body {
 .gallery-container {
   flex: 1;
   padding: 2px;
-  padding-bottom: calc(var(--safe-bottom) + 100px);
+  padding-bottom: calc(var(--safe-bottom) + 110px);
   min-height: calc(100dvh - 80px);
 }
 
@@ -758,4 +763,486 @@ html, body {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+
+/* ─── Bottom tab bar ────────────────────────────────────────────────────────── */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  background: rgba(18, 18, 18, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 0 6px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+  letter-spacing: 0.2px;
+}
+
+.tab-btn svg {
+  width: 24px;
+  height: 24px;
+  transition: stroke 0.15s;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+}
+
+/* Push gallery / spending content above the tab bar */
+.gallery-container,
+#tab-spending {
+  padding-bottom: calc(var(--safe-bottom) + 90px);
+}
+
+/* ─── FAB scan variant ──────────────────────────────────────────────────────── */
+.fab-scan {
+  background: #30d158;
+  box-shadow: 0 4px 20px rgba(48, 209, 88, 0.45);
+}
+.fab-scan:active {
+  background: #28b84d;
+  box-shadow: 0 2px 10px rgba(48, 209, 88, 0.25);
+}
+
+/* ─── Setup: optional tag ───────────────────────────────────────────────────── */
+.optional-tag {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text3);
+  margin-left: 4px;
+}
+
+/* ─── Spending summary card ─────────────────────────────────────────────────── */
+.spending-summary-wrap {
+  padding: 16px 16px 0;
+}
+
+.spending-summary-card {
+  background: linear-gradient(135deg, #1a2a3a, #111820);
+  border: 0.5px solid rgba(10,132,255,0.2);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spending-summary-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.spending-label {
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.spending-total {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.spending-badge-wrap {
+  margin-top: 4px;
+}
+
+.spending-count {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(10,132,255,0.15);
+  border: 0.5px solid rgba(10,132,255,0.3);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.spending-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.spending-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+}
+.spending-bar-fill.warn { background: #ff9f0a; }
+.spending-bar-fill.over { background: var(--danger); }
+
+.spending-bar-label {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: -8px;
+}
+
+/* ─── No OpenAI banner ──────────────────────────────────────────────────────── */
+.no-openai-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 16px 0;
+  padding: 12px 14px;
+  background: rgba(255,159,10,0.1);
+  border: 0.5px solid rgba(255,159,10,0.3);
+  border-radius: var(--radius-sm);
+  color: #ff9f0a;
+  font-size: 13px;
+}
+
+.no-openai-banner svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.no-openai-banner div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.no-openai-banner strong {
+  font-weight: 600;
+}
+
+.no-openai-banner span {
+  color: rgba(255,159,10,0.8);
+  font-size: 12px;
+}
+
+/* ─── Slip list ──────────────────────────────────────────────────────────────── */
+.slip-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 8px;
+}
+
+#slip-list-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-text-danger {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.slip-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 40px;
+  color: var(--text3);
+  text-align: center;
+}
+
+.slip-empty svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.25;
+}
+
+.slip-empty p {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.slip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 0 8px;
+}
+
+.slip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
+  gap: 12px;
+  animation: slideDown 0.25s ease;
+}
+
+.slip-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.slip-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+}
+
+.slip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slip-thumb svg {
+  width: 22px;
+  height: 22px;
+  opacity: 0.4;
+}
+
+.slip-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slip-merchant {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slip-time {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.slip-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.slip-amount {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.slip-delete-btn {
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.slip-delete-btn svg { width: 14px; height: 14px; }
+.slip-delete-btn:active { opacity: 1; color: var(--danger); }
+
+/* ─── Scan result sheet ──────────────────────────────────────────────────────── */
+.scan-sheet {
+  max-height: 92dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scan-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 24px;
+  color: var(--text3);
+  font-size: 14px;
+}
+
+.scan-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.scan-result-img-wrap {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  background: var(--surface);
+}
+
+.scan-result-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scan-result-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scan-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.scan-amount-label {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.scan-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--success);
+  letter-spacing: -0.5px;
+}
+
+.scan-merchant-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.scan-merchant-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.scan-merchant {
+  font-size: 15px;
+  color: var(--text2);
+}
+
+.scan-note-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scan-note-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.scan-note-input {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+.scan-note-input:focus {
+  border-color: var(--accent);
+}
+
+.scan-error-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,69,58,0.1);
+  border: 0.5px solid rgba(255,69,58,0.25);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.scan-error-row svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.scan-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.scan-actions .btn-secondary {
+  flex: 1;
+  padding: 14px;
+  text-align: center;
+}
+
+.scan-save {
+  flex: 2;
+  padding: 14px;
+  font-size: 16px;
+  text-align: center;
 }
