@@ -98,6 +98,68 @@
   border-radius: var(--radius);
 }
 
+/* Import all photos button on welcome screen */
+.btn-welcome-import {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text2);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-welcome-import svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.btn-welcome-import:active { background: var(--border); }
+.btn-welcome-import:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Welcome import progress */
+.welcome-import-progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wip-bar-wrap {
+  height: 5px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.wip-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.35s ease, background 0.3s;
+}
+
+.wip-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text3);
+}
+
+#wip-pct {
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* ─── Scan loading with preview ─────────────────────────────────────────────── */
 .scan-loading-inner {
   display: flex;

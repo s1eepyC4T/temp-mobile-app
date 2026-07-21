@@ -43,6 +43,26 @@
         </div>
       </div>
       <button id="welcome-start-btn" class="btn-primary welcome-btn">Get Started</button>
+      <button id="welcome-import-btn" class="btn-welcome-import">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Import all photos from Camera Roll
+      </button>
+      <input type="file" id="welcome-photo-input" accept="image/*" multiple style="display:none" />
+
+      <!-- Import progress shown on welcome screen -->
+      <div id="welcome-import-progress" class="welcome-import-progress hidden">
+        <div class="wip-bar-wrap">
+          <div id="wip-bar" class="wip-bar" style="width:0%"></div>
+        </div>
+        <div class="wip-stats">
+          <span id="wip-label">Uploading photos...</span>
+          <span id="wip-pct">0%</span>
+        </div>
+      </div>
     </div>
   </div>
 

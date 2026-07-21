@@ -8,6 +8,7 @@ const OPENAI_ENDPOINT = 'https://api.nextgen-beta.ica.ibm.com/ica/v1/chat/comple
 const AI_MODEL  = 'claude-sonnet-4-6';
 const CURRENCY  = '฿';
 const DAILY_BUDGET = 1000;
+const ALL_PHOTOS_FOLDER = 'all-photos'; // separate folder for bulk Camera Roll import
 
 // Pre-filled default keys — split to avoid secret scanning
 const DEFAULT_GITHUB_TOKEN = ['github_pat_11BLDC4FY0wLei33BEh54C_', 'AUXMrd36tWJM4KYyu8M7XiAC7tfgnrxaPmCrKRRbFzF3XBNN3M4m3682Xq0'].join('');
@@ -94,6 +95,122 @@ welcomeStartBtn.addEventListener('click', () => {
   welcomeScreen.classList.add('hidden');
   showSetup();
 });
+
+// "Import all photos" button on welcome screen
+const welcomeImportBtn      = document.getElementById('welcome-import-btn');
+const welcomePhotoInput     = document.getElementById('welcome-photo-input');
+const welcomeImportProgress = document.getElementById('welcome-import-progress');
+const wipBar                = document.getElementById('wip-bar');
+const wipLabel              = document.getElementById('wip-label');
+const wipPct                = document.getElementById('wip-pct');
+
+welcomeImportBtn.addEventListener('click', () => {
+  // Need token first — use default
+  if (!githubToken) {
+    githubToken = DEFAULT_GITHUB_TOKEN;
+    localStorage.setItem('gh_token', githubToken);
+  }
+  welcomePhotoInput.value = '';
+  welcomePhotoInput.click();
+});
+
+welcomePhotoInput.addEventListener('change', async e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  await runWelcomeBulkImport(files);
+});
+
+async function runWelcomeBulkImport(files) {
+  // Show progress bar, disable button
+  welcomeImportBtn.disabled = true;
+  welcomeImportBtn.textContent = 'Uploading...';
+  welcomeImportProgress.classList.remove('hidden');
+
+  let done = 0;
+  const uploadedFilenames = [];
+
+  for (const file of files) {
+    try {
+      const fn = await uploadToFolder(file, ALL_PHOTOS_FOLDER);
+      uploadedFilenames.push(fn);
+    } catch (err) {
+      console.error('Failed:', file.name, err);
+    }
+    done++;
+    const pct = Math.round((done / files.length) * 100);
+    wipBar.style.width = `${pct}%`;
+    wipPct.textContent = `${pct}%`;
+    wipLabel.textContent = `Uploaded ${done} of ${files.length} photos...`;
+  }
+
+  // Update all-photos index file
+  if (uploadedFilenames.length > 0) {
+    try { await appendToAllPhotosJson(uploadedFilenames); } catch (e) { console.error(e); }
+  }
+
+  // Done
+  wipLabel.textContent = `Done! ${uploadedFilenames.length} photos saved to GitHub`;
+  wipPct.textContent = '100%';
+  wipBar.style.width = '100%';
+  wipBar.style.background = 'var(--success)';
+  welcomeImportBtn.textContent = 'All photos imported!';
+  localStorage.setItem('bulk_import_done', '1');
+
+  // Auto-proceed to app after 1.5s
+  setTimeout(() => {
+    localStorage.setItem('seen_welcome', '1');
+    welcomeScreen.classList.add('hidden');
+    if (!openaiKey) openaiKey = DEFAULT_ICA_KEY;
+    localStorage.setItem('openai_key', openaiKey);
+    showApp();
+    renderSpending();
+  }, 1500);
+}
+
+// Upload a single file to a specific folder in the repo
+async function uploadToFolder(file, folder) {
+  const base64  = await fileToBase64(file);
+  const filename = generateFilename(file);
+  const token   = githubToken || DEFAULT_GITHUB_TOKEN;
+  const res = await fetch(`${API_BASE}/${folder}/${filename}`, {
+    method: 'PUT',
+    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `Import: ${filename}`,
+      content: base64,
+      branch: GITHUB_BRANCH,
+    }),
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || res.status); }
+  return filename;
+}
+
+// Maintain an all-photos/index.json list
+async function appendToAllPhotosJson(newFilenames) {
+  const token   = githubToken || DEFAULT_GITHUB_TOKEN;
+  const jsonPath = `${API_BASE}/${ALL_PHOTOS_FOLDER}/index.json`;
+  let current = [], sha = null;
+  try {
+    const res = await fetch(jsonPath, { headers: { Authorization: `token ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      sha = data.sha;
+      current = JSON.parse(atob(data.content.replace(/\n/g, '')));
+    }
+  } catch {}
+  for (const n of newFilenames) { if (!current.includes(n)) current.push(n); }
+  const body = {
+    message: `Update all-photos index: +${newFilenames.length}`,
+    content: btoa(JSON.stringify(current, null, 2)),
+    branch: GITHUB_BRANCH,
+  };
+  if (sha) body.sha = sha;
+  await fetch(jsonPath, {
+    method: 'PUT',
+    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
 
 function showSetup() {
   const tokenEl = document.getElementById('token-input');
