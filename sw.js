@@ -1,4 +1,4 @@
-const CACHE_NAME = 'photo-gallery-v1';
+const CACHE_NAME = 'spending-v3';
 const SHELL_FILES = [
   './',
   './index.html',
