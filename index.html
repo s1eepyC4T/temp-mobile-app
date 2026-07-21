@@ -14,7 +14,41 @@
 </head>
 <body>
 
-  <!-- SETUP SCREEN -->
+  <!-- ══════════════════════════════════════
+       WELCOME / SPLASH SCREEN
+  ══════════════════════════════════════ -->
+  <div id="welcome-screen" class="screen hidden">
+    <div class="welcome-bg"></div>
+    <div class="welcome-content">
+      <div class="welcome-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <line x1="12" y1="1" x2="12" y2="23" stroke-linecap="round"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="welcome-title">Spending</h1>
+      <p class="welcome-sub">Track your daily expenses with AI receipt scanning</p>
+      <div class="welcome-features">
+        <div class="welcome-feature">
+          <span class="wf-dot green"></span>
+          <span>Scan any slip or receipt</span>
+        </div>
+        <div class="welcome-feature">
+          <span class="wf-dot blue"></span>
+          <span>AI detects the amount instantly</span>
+        </div>
+        <div class="welcome-feature">
+          <span class="wf-dot purple"></span>
+          <span>See your daily total at a glance</span>
+        </div>
+      </div>
+      <button id="welcome-start-btn" class="btn-primary welcome-btn">Get Started</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SETUP SCREEN
+  ══════════════════════════════════════ -->
   <div id="setup-screen" class="screen hidden">
     <div class="setup-card">
       <div class="setup-icon">
@@ -23,27 +57,21 @@
           <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round"/>
         </svg>
       </div>
-      <h1>Spending</h1>
-      <p class="setup-subtitle">Connect your accounts to get started</p>
+      <h1>Connect</h1>
+      <p class="setup-subtitle">Keys are pre-filled — tap Connect to continue</p>
 
       <div class="form-group">
         <label for="token-input">GitHub Personal Access Token</label>
-        <input type="password" id="token-input" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx"
+        <input type="password" id="token-input"
           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-        <p class="hint">
-          Needs <strong>Contents</strong> read &amp; write on repo <code>temp-mobile-app</code>.
-          <a href="https://github.com/settings/tokens?type=beta" target="_blank">Generate token</a>
-        </p>
+        <p class="hint">Edit if you need to use a different token.</p>
       </div>
 
       <div class="form-group">
-        <label for="openai-key-input">IBM ICA API Key <span class="optional-tag">for receipt scanning</span></label>
-        <input type="password" id="openai-key-input" placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+        <label for="openai-key-input">IBM ICA API Key</label>
+        <input type="password" id="openai-key-input"
           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-        <p class="hint">
-          Used to scan slip photos with Claude Sonnet via IBM ICA.
-          <a href="https://nextgen-beta.ica.ibm.com" target="_blank">Get API key</a>
-        </p>
+        <p class="hint">Edit if you need to use a different key.</p>
       </div>
 
       <button id="save-token-btn" class="btn-primary">Connect</button>
@@ -51,7 +79,9 @@
     </div>
   </div>
 
-  <!-- MAIN APP SCREEN -->
+  <!-- ══════════════════════════════════════
+       MAIN APP SCREEN
+  ══════════════════════════════════════ -->
   <div id="app-screen" class="screen hidden">
 
     <header class="app-header">
@@ -76,30 +106,25 @@
       </div>
     </div>
 
-    <!-- Hidden DOM nodes kept for JS compatibility -->
-    <div id="upload-toast" style="display:none"></div>
-    <span id="toast-msg" style="display:none"></span>
-    <div id="tab-gallery" style="display:none">
-      <div id="import-banner"></div>
-      <button id="import-all-btn"></button>
-      <button id="import-dismiss-btn"></button>
-      <div id="bulk-progress-screen"></div>
-      <div id="bulk-progress-bar"></div>
-      <p id="bulk-progress-subtitle"></p>
-      <span id="bulk-count"></span>
-      <span id="bulk-percent"></span>
-      <div id="bulk-current-file"></div>
-      <div id="bulk-failed-count"></div>
-      <span id="bulk-failed-text"></span>
-      <button id="bulk-cancel-btn"></button>
-      <div id="gallery-grid"></div>
-      <div id="empty-state"></div>
-      <div id="loading-state"></div>
-      <button id="add-photo-btn"></button>
-      <input type="file" id="file-input" accept="image/*" multiple />
-      <input type="file" id="bulk-file-input" accept="image/*" multiple />
-      <button id="refresh-btn"></button>
-      <span id="app-title" style="display:none"></span>
+    <!-- Hidden DOM stubs for JS compat -->
+    <div style="display:none">
+      <div id="upload-toast"></div><span id="toast-msg"></span>
+      <div id="tab-gallery">
+        <div id="import-banner"></div><button id="import-all-btn"></button>
+        <button id="import-dismiss-btn"></button><div id="bulk-progress-screen"></div>
+        <div id="bulk-progress-bar"></div><p id="bulk-progress-subtitle"></p>
+        <span id="bulk-count"></span><span id="bulk-percent"></span>
+        <div id="bulk-current-file"></div><div id="bulk-failed-count"></div>
+        <span id="bulk-failed-text"></span><button id="bulk-cancel-btn"></button>
+        <div id="gallery-grid"></div><div id="empty-state"></div>
+        <div id="loading-state"></div><button id="add-photo-btn"></button>
+        <input type="file" id="file-input" accept="image/*" multiple />
+        <input type="file" id="bulk-file-input" accept="image/*" multiple />
+        <button id="refresh-btn"></button><span id="app-title"></span>
+      </div>
+      <div id="lightbox"><button id="lightbox-close"></button>
+        <img id="lightbox-img" src="" alt=""/><div id="lightbox-caption"></div></div>
+      <span id="settings-import-btn"></span>
     </div>
 
     <!-- SPENDING VIEW -->
@@ -170,8 +195,11 @@
   <div id="scan-sheet" class="bottom-sheet scan-sheet hidden">
     <div class="sheet-handle"></div>
     <div id="scan-loading" class="scan-loading hidden">
-      <div class="spinner large"></div>
-      <p>Scanning receipt with AI...</p>
+      <div class="scan-loading-inner">
+        <div class="spinner large"></div>
+        <p>Scanning with AI...</p>
+        <p class="scan-loading-sub">Reading your receipt</p>
+      </div>
     </div>
     <div id="scan-result" class="scan-result hidden">
       <div class="scan-result-img-wrap">
@@ -213,7 +241,6 @@
     <div class="sheet-handle"></div>
     <h2>Settings</h2>
 
-    <!-- iOS Shortcut install banner -->
     <div class="shortcut-install-banner">
       <div class="shortcut-install-left">
         <div class="shortcut-install-icon">
@@ -227,9 +254,7 @@
           <span>Install the iOS Shortcut to auto-upload every new photo you take</span>
         </div>
       </div>
-      <a href="https://s1eepyc4t.github.io/temp-mobile-app/SyncPhoto.shortcut" class="btn-shortcut">
-        Install
-      </a>
+      <a href="https://s1eepyc4t.github.io/temp-mobile-app/SyncPhoto.shortcut" class="btn-shortcut">Install</a>
     </div>
 
     <div class="settings-item">
@@ -246,14 +271,6 @@
     </div>
     <div style="height: env(safe-area-inset-bottom, 20px);"></div>
   </div>
-
-  <!-- kept for JS compat -->
-  <div id="lightbox" style="display:none">
-    <button id="lightbox-close"></button>
-    <img id="lightbox-img" src="" alt="" />
-    <div id="lightbox-caption"></div>
-  </div>
-  <span id="settings-import-btn" style="display:none"></span>
 
   <script src="app.js"></script>
 </body>
