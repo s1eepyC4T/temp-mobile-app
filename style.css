@@ -1,7 +1,8 @@
 /* ─── Reset & Base ──────────────────────────────────────────────────────────── */
-/* Tab content switching */
-.tab-content { display: flex; flex-direction: column; }
-.tab-content.hidden { display: none !important; }
+/* Spending page — full scrollable content area */
+.spending-page {
+  padding-bottom: calc(var(--safe-bottom) + 90px);
+}
 
 
 *, *::before, *::after {
