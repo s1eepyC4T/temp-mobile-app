@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spending-v3';
+const CACHE_NAME = 'spending-v4';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -38,6 +38,16 @@ self.addEventListener('fetch', (event) => {
 
   // Don't intercept GitHub API calls (auth + writes must go over the network)
   if (url.hostname === 'api.github.com') {
+    return;
+  }
+
+  // Don't intercept IBM ICA API calls
+  if (url.hostname === 'api.nextgen-beta.ica.ibm.com') {
+    return;
+  }
+
+  // Don't intercept OpenAI API calls
+  if (url.hostname === 'api.openai.com') {
     return;
   }
 
