@@ -38,12 +38,12 @@
       </div>
 
       <div class="form-group">
-        <label for="openai-key-input">OpenAI API Key <span class="optional-tag">for receipt scanning</span></label>
-        <input type="password" id="openai-key-input" placeholder="sk-proj-xxxxxxxxxxxxxxxxxxxx"
+        <label for="openai-key-input">IBM ICA API Key <span class="optional-tag">for receipt scanning</span></label>
+        <input type="password" id="openai-key-input" placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
         <p class="hint">
-          Used only on your device to scan slip photos with GPT-4o Vision.
-          <a href="https://platform.openai.com/api-keys" target="_blank">Get API key</a>
+          Used only on your device to scan slip photos with Claude Sonnet via IBM ICA.
+          <a href="https://nextgen-beta.ica.ibm.com" target="_blank">Get API key</a>
         </p>
       </div>
 
@@ -186,7 +186,7 @@
           <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
         </svg>
         <div>
-          <strong>OpenAI key not set</strong>
+          <strong>IBM ICA key not set</strong>
           <span>Go to Settings to add your API key for receipt scanning.</span>
         </div>
       </div>
@@ -320,7 +320,7 @@
       <button id="update-token-btn" class="btn-secondary small">Update</button>
     </div>
     <div class="settings-item">
-      <span>OpenAI API Key</span>
+      <span>IBM ICA API Key</span>
       <button id="update-openai-btn" class="btn-secondary small">Update</button>
     </div>
     <div class="settings-item">

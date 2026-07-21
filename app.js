@@ -4,7 +4,8 @@ const GITHUB_REPO   = 'temp-mobile-app';
 const GITHUB_BRANCH = 'main';
 const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents`;
 const RAW_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
-const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_ENDPOINT = 'https://api.nextgen-beta.ica.ibm.com/ica/v1/chat/completions';
+const AI_MODEL = 'claude-sonnet-4-6';
 const CURRENCY = '฿';
 const DAILY_BUDGET = 1000; // soft budget for the progress bar (฿ per day)
 
@@ -590,7 +591,7 @@ The slip may be in Thai — extract the numeric total amount regardless of langu
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: AI_MODEL,
       max_tokens: 100,
       messages: [
         {
