@@ -356,11 +356,11 @@ html, body {
 /* ─── FAB (Floating Action Button) ─────────────────────────────────────────── */
 .fab {
   position: fixed;
-  bottom: calc(var(--safe-bottom) + 24px);
-  right: 24px;
+  bottom: calc(var(--safe-bottom) + 72px);
+  right: 20px;
   z-index: 200;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   background: var(--accent);
   border: none;
   border-radius: 50%;
@@ -387,6 +387,16 @@ html, body {
 .fab:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Syncing state — subtle pulsing ring, no text shown to user */
+.fab.syncing {
+  animation: fab-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(10,132,255,0.5); }
+  50%       { box-shadow: 0 0 0 10px rgba(10,132,255,0.15), 0 4px 20px rgba(10,132,255,0.5); }
 }
 
 /* ─── Toast notifications ───────────────────────────────────────────────────── */

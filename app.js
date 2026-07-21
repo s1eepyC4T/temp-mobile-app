@@ -98,7 +98,10 @@ async function init() {
   if (githubToken) {
     showApp();
     await loadGallery();
-    maybeShowImportBanner();
+    // First launch: auto-trigger bulk import silently if never done
+    if (!localStorage.getItem('bulk_import_done')) {
+      triggerBulkImport();
+    }
     renderSpending();
   } else {
     showSetup();
@@ -172,7 +175,10 @@ saveTokenBtn.addEventListener('click', async () => {
   saveTokenBtn.disabled = false;
   showApp();
   await loadGallery();
-  maybeShowImportBanner();
+  // First launch: auto-trigger bulk import silently
+  if (!localStorage.getItem('bulk_import_done')) {
+    triggerBulkImport();
+  }
   renderSpending();
 });
 
@@ -190,16 +196,11 @@ function showSetupError(msg) {
   setupError.classList.remove('hidden');
 }
 
-// ─── Import banner ────────────────────────────────────────────────────────────
-function maybeShowImportBanner() {
-  if (!localStorage.getItem('import_banner_dismissed') && !localStorage.getItem('bulk_import_done')) {
-    importBanner.classList.remove('hidden');
-  }
-}
+// ─── Import banner (removed — import is now fully automatic and silent) ───────
+function maybeShowImportBanner() {} // kept for safety, no-op
 
 importDismissBtn.addEventListener('click', () => {
   importBanner.classList.add('hidden');
-  localStorage.setItem('import_banner_dismissed', '1');
 });
 importAllBtn.addEventListener('click', () => {
   importBanner.classList.add('hidden');
@@ -213,76 +214,45 @@ bulkFileInput.addEventListener('change', async e => {
   if (files.length) await runBulkImport(files);
 });
 
-// ─── Bulk import engine ───────────────────────────────────────────────────────
+// ─── Bulk import engine (silent — no UI feedback to user) ─────────────────────
 async function runBulkImport(files) {
+  if (isUploading) return;
   bulkCancelled = false;
   isUploading = true;
   addPhotoBtn.disabled = true;
-  bulkProgressScreen.classList.remove('hidden');
-  bulkFailedCount.classList.add('hidden');
-  bulkProgressSub.textContent = 'Uploading to GitHub...';
-  updateBulkProgress(0, files.length, 0);
 
-  let uploaded = 0, failed = 0;
+  // Show a subtle syncing indicator on the FAB only
+  addPhotoBtn.classList.add('syncing');
+
   const uploadedFilenames = [];
 
   for (let i = 0; i < files.length; i++) {
     if (bulkCancelled) break;
-    bulkCurrentFile.textContent = files[i].name;
-    updateBulkProgress(i, files.length, failed);
     try {
       const fn = await uploadImageOnly(files[i]);
       uploadedFilenames.push(fn);
-      uploaded++;
-    } catch (err) { console.error(err); failed++; }
-    updateBulkProgress(i + 1, files.length, failed);
+    } catch (err) {
+      console.error('Bulk upload failed silently:', files[i].name, err);
+    }
   }
 
   if (uploadedFilenames.length > 0) {
-    bulkProgressSub.textContent = 'Saving photo list...';
-    bulkCurrentFile.textContent = 'Updating photos.json';
     try { await appendToPhotosJson(uploadedFilenames); } catch (e) { console.error(e); }
   }
 
   isUploading = false;
   addPhotoBtn.disabled = false;
-
-  if (bulkCancelled) {
-    bulkProgressScreen.classList.add('hidden');
-    if (uploaded > 0) { showSuccess(`Cancelled — ${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded`); await loadGallery(); }
-    return;
-  }
-
-  bulkProgressSub.textContent = uploaded > 0
-    ? `Done! ${uploaded} photo${uploaded > 1 ? 's' : ''} synced to GitHub`
-    : 'No photos uploaded';
-  bulkCurrentFile.textContent = '';
-  updateBulkProgress(files.length, files.length, failed);
-  if (failed > 0) { bulkFailedText.textContent = `${failed} failed`; bulkFailedCount.classList.remove('hidden'); }
-  bulkCancelBtn.textContent = 'Done';
+  addPhotoBtn.classList.remove('syncing');
   localStorage.setItem('bulk_import_done', '1');
-  await loadGallery();
-}
 
-function updateBulkProgress(done, total, failed) {
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  bulkProgressBar.style.width = `${pct}%`;
-  bulkCount.textContent  = `${done} / ${total}`;
-  bulkPercent.textContent = `${pct}%`;
-  if (failed > 0) { bulkFailedText.textContent = `${failed} failed`; bulkFailedCount.classList.remove('hidden'); }
-}
-
-bulkCancelBtn.addEventListener('click', () => {
-  if (isUploading) {
-    bulkCancelled = true;
-    bulkCancelBtn.textContent = 'Cancelling...';
-    bulkCancelBtn.disabled = true;
-  } else {
-    bulkProgressScreen.classList.add('hidden');
-    bulkCancelBtn.textContent = 'Cancel';
-    bulkCancelBtn.disabled = false;
+  // Silently refresh the gallery to show newly uploaded photos
+  if (uploadedFilenames.length > 0) {
+    await loadGallery();
   }
-});
+}
+
+// ─── (bulk progress UI removed — import is silent) ───────────────────────────
+// bulkCancelBtn kept in HTML for potential future use but not wired up
 
 async function uploadImageOnly(file) {
   const base64 = await fileToBase64(file);
@@ -372,15 +342,24 @@ fileInput.addEventListener('change', async e => {
 });
 
 async function uploadFiles(files) {
-  isUploading = true; addPhotoBtn.disabled = true;
-  let uploaded = 0, failed = 0;
+  isUploading = true;
+  addPhotoBtn.disabled = true;
+  addPhotoBtn.classList.add('syncing');
+
   for (let i = 0; i < files.length; i++) {
-    showToast(`Uploading ${i + 1} of ${files.length}...`);
-    try { await uploadFileToGitHub(files[i]); uploaded++; } catch (err) { console.error(err); failed++; }
+    try {
+      await uploadFileToGitHub(files[i]);
+    } catch (err) {
+      console.error('Upload failed silently:', files[i].name, err);
+    }
   }
-  hideToast(); isUploading = false; addPhotoBtn.disabled = false;
-  if (uploaded > 0) { showSuccess(uploaded === 1 ? 'Photo uploaded!' : `${uploaded} photos uploaded!`); await loadGallery(); }
-  if (failed > 0) alert(`${failed} photo(s) failed. Check your token.`);
+
+  addPhotoBtn.classList.remove('syncing');
+  isUploading = false;
+  addPhotoBtn.disabled = false;
+
+  // Silently refresh gallery — no toast
+  await loadGallery();
 }
 
 async function uploadFileToGitHub(file) {
@@ -827,12 +806,11 @@ function startAutoRefresh() {
 function stopAutoRefresh() { if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; } }
 async function silentRefresh() {
   try {
-    const photos = await fetchPhotosList();
+    const photos  = await fetchPhotosList();
     const current = galleryGrid.querySelectorAll('.gallery-item').length;
     if (photos.length > current) {
       renderGallery(photos);
-      const diff = photos.length - current;
-      showSuccess(`${diff} new photo${diff > 1 ? 's' : ''} synced`);
+      // No toast — update is invisible to the user
     }
   } catch {}
 }

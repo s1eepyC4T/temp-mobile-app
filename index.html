@@ -77,9 +77,9 @@
       </div>
     </header>
 
-    <!-- Toasts -->
-    <div id="upload-toast" class="toast hidden">
-      <div class="toast-inner"><div class="spinner"></div><span id="toast-msg">Uploading...</span></div>
+    <!-- Upload toast (hidden — uploads are now silent, spinner is on FAB) -->
+    <div id="upload-toast" class="toast hidden" style="display:none!important">
+      <div class="toast-inner"><div class="spinner"></div><span id="toast-msg"></span></div>
     </div>
     <div id="success-toast" class="toast success hidden">
       <div class="toast-inner">
@@ -93,36 +93,22 @@
     <!-- ── TAB: GALLERY ───────────────────────────────────────── -->
     <div id="tab-gallery" class="tab-content">
 
-      <!-- First-launch bulk import banner -->
-      <div id="import-banner" class="import-banner hidden">
-        <div class="import-banner-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="import-banner-text">
-          <strong>Import existing photos</strong>
-          <span>Select photos from your Camera Roll to sync to GitHub</span>
-        </div>
+      <!-- First-launch bulk import banner (hidden — import is now automatic) -->
+      <div id="import-banner" class="import-banner hidden" style="display:none!important">
+        <div class="import-banner-icon"></div>
+        <div class="import-banner-text"></div>
         <div class="import-banner-actions">
           <button id="import-all-btn" class="btn-import">Import All</button>
-          <button id="import-dismiss-btn" class="btn-dismiss" aria-label="Dismiss">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
-              <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
-            </svg>
-          </button>
+          <button id="import-dismiss-btn" class="btn-dismiss" aria-label="Dismiss"></button>
         </div>
       </div>
 
-      <!-- Bulk import progress -->
-      <div id="bulk-progress-screen" class="bulk-progress-screen hidden">
+      <!-- Bulk import progress (hidden — import is now silent) -->
+      <div id="bulk-progress-screen" class="bulk-progress-screen hidden" style="display:none!important">
         <div class="bulk-progress-card">
           <div class="bulk-progress-header">
             <h2>Importing Photos</h2>
-            <p id="bulk-progress-subtitle">Uploading to GitHub...</p>
+            <p id="bulk-progress-subtitle"></p>
           </div>
           <div class="bulk-progress-bar-wrap">
             <div id="bulk-progress-bar" class="bulk-progress-bar" style="width:0%"></div>
@@ -134,11 +120,6 @@
           <div id="bulk-current-file" class="bulk-current-file"></div>
           <div class="bulk-progress-footer">
             <div id="bulk-failed-count" class="bulk-failed hidden">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
-                <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
-              </svg>
               <span id="bulk-failed-text"></span>
             </div>
             <button id="bulk-cancel-btn" class="btn-secondary">Cancel</button>
