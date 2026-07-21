@@ -1,5 +1,5 @@
 // ─── Config ───────────────────────────────────────────────────────────────────
-const GITHUB_OWNER  = 's1eepyc4t';
+const GITHUB_OWNER  = 's1eepyC4T';
 const GITHUB_REPO   = 'temp-mobile-app';
 const GITHUB_BRANCH = 'main';
 const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents`;
