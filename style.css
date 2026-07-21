@@ -538,8 +538,82 @@ html, body {
 .bottom-sheet h2 {
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
+
+/* ─── Shortcut install banner (inside settings) ─────────────────────────────── */
+.shortcut-install-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(48,209,88,0.12), rgba(48,209,88,0.06));
+  border: 0.5px solid rgba(48,209,88,0.3);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.shortcut-install-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.shortcut-install-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(48,209,88,0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.shortcut-install-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.shortcut-install-left div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shortcut-install-left strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.shortcut-install-left span {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+.btn-shortcut {
+  padding: 9px 16px;
+  background: var(--success);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.btn-shortcut:active { opacity: 0.75; }
 
 .settings-item {
   display: flex;

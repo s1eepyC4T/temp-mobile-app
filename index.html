@@ -297,6 +297,28 @@
   <div id="settings-sheet" class="bottom-sheet hidden">
     <div class="sheet-handle"></div>
     <h2>Settings</h2>
+
+    <!-- iOS Shortcut install banner -->
+    <div class="shortcut-install-banner">
+      <div class="shortcut-install-left">
+        <div class="shortcut-install-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
+            <path d="M8 12l4-4 4 4M12 8v8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <strong>Auto-sync new photos</strong>
+          <span>Tap to install the iOS Shortcut that auto-uploads every new photo you take</span>
+        </div>
+      </div>
+      <a id="install-shortcut-btn"
+         href="https://s1eepyc4t.github.io/temp-mobile-app/SyncPhoto.shortcut"
+         class="btn-shortcut">
+        Install
+      </a>
+    </div>
+
     <div class="settings-item">
       <span>Import all photos</span>
       <button id="settings-import-btn" class="btn-secondary small">Import</button>
@@ -311,7 +333,7 @@
     </div>
     <div class="settings-item">
       <span>Repository</span>
-      <code>s1eepyc4t/temp-mobile-app</code>
+      <code>s1eepyC4T/temp-mobile-app</code>
     </div>
     <div class="settings-item danger">
       <span>Clear token &amp; logout</span>
