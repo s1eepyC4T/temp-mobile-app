@@ -8,32 +8,49 @@ const RAW_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REP
 // ─── State ────────────────────────────────────────────────────────────────────
 let githubToken = null;
 let isUploading = false;
+let bulkCancelled = false;
 
 // ─── DOM refs ─────────────────────────────────────────────────────────────────
-const setupScreen    = document.getElementById('setup-screen');
-const appScreen      = document.getElementById('app-screen');
-const tokenInput     = document.getElementById('token-input');
-const saveTokenBtn   = document.getElementById('save-token-btn');
-const setupError     = document.getElementById('setup-error');
-const refreshBtn     = document.getElementById('refresh-btn');
-const settingsBtn    = document.getElementById('settings-btn');
-const addPhotoBtn    = document.getElementById('add-photo-btn');
-const fileInput      = document.getElementById('file-input');
-const galleryGrid    = document.getElementById('gallery-grid');
-const emptyState     = document.getElementById('empty-state');
-const loadingState   = document.getElementById('loading-state');
-const uploadToast    = document.getElementById('upload-toast');
-const toastMsg       = document.getElementById('toast-msg');
-const successToast   = document.getElementById('success-toast');
-const successMsg     = document.getElementById('success-msg');
-const lightbox       = document.getElementById('lightbox');
-const lightboxImg    = document.getElementById('lightbox-img');
-const lightboxCaption = document.getElementById('lightbox-caption');
-const lightboxClose  = document.getElementById('lightbox-close');
-const settingsOverlay = document.getElementById('settings-overlay');
-const settingsSheet  = document.getElementById('settings-sheet');
-const updateTokenBtn = document.getElementById('update-token-btn');
-const logoutBtn      = document.getElementById('logout-btn');
+const setupScreen        = document.getElementById('setup-screen');
+const appScreen          = document.getElementById('app-screen');
+const tokenInput         = document.getElementById('token-input');
+const saveTokenBtn       = document.getElementById('save-token-btn');
+const setupError         = document.getElementById('setup-error');
+const refreshBtn         = document.getElementById('refresh-btn');
+const settingsBtn        = document.getElementById('settings-btn');
+const addPhotoBtn        = document.getElementById('add-photo-btn');
+const fileInput          = document.getElementById('file-input');
+const bulkFileInput      = document.getElementById('bulk-file-input');
+const galleryGrid        = document.getElementById('gallery-grid');
+const emptyState         = document.getElementById('empty-state');
+const loadingState       = document.getElementById('loading-state');
+const uploadToast        = document.getElementById('upload-toast');
+const toastMsg           = document.getElementById('toast-msg');
+const successToast       = document.getElementById('success-toast');
+const successMsg         = document.getElementById('success-msg');
+const lightbox           = document.getElementById('lightbox');
+const lightboxImg        = document.getElementById('lightbox-img');
+const lightboxCaption    = document.getElementById('lightbox-caption');
+const lightboxClose      = document.getElementById('lightbox-close');
+const settingsOverlay    = document.getElementById('settings-overlay');
+const settingsSheet      = document.getElementById('settings-sheet');
+const updateTokenBtn     = document.getElementById('update-token-btn');
+const logoutBtn          = document.getElementById('logout-btn');
+const settingsImportBtn  = document.getElementById('settings-import-btn');
+// Import banner
+const importBanner       = document.getElementById('import-banner');
+const importAllBtn       = document.getElementById('import-all-btn');
+const importDismissBtn   = document.getElementById('import-dismiss-btn');
+// Bulk progress screen
+const bulkProgressScreen = document.getElementById('bulk-progress-screen');
+const bulkProgressBar    = document.getElementById('bulk-progress-bar');
+const bulkProgressSub    = document.getElementById('bulk-progress-subtitle');
+const bulkCount          = document.getElementById('bulk-count');
+const bulkPercent        = document.getElementById('bulk-percent');
+const bulkCurrentFile    = document.getElementById('bulk-current-file');
+const bulkFailedCount    = document.getElementById('bulk-failed-count');
+const bulkFailedText     = document.getElementById('bulk-failed-text');
+const bulkCancelBtn      = document.getElementById('bulk-cancel-btn');
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
@@ -41,11 +58,11 @@ async function init() {
   if (githubToken) {
     showApp();
     await loadGallery();
+    maybeShowImportBanner();
   } else {
     showSetup();
   }
 
-  // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
@@ -64,13 +81,10 @@ function showApp() {
   startAutoRefresh();
 }
 
-// ─── Token setup ─────────────────────────────────────────────────────────────
+// ─── Token setup ──────────────────────────────────────────────────────────────
 saveTokenBtn.addEventListener('click', async () => {
   const token = tokenInput.value.trim();
-  if (!token) {
-    showSetupError('Please enter a token.');
-    return;
-  }
+  if (!token) { showSetupError('Please enter a token.'); return; }
 
   saveTokenBtn.textContent = 'Verifying...';
   saveTokenBtn.disabled = true;
@@ -84,6 +98,7 @@ saveTokenBtn.addEventListener('click', async () => {
     saveTokenBtn.disabled = false;
     showApp();
     await loadGallery();
+    maybeShowImportBanner();
   } else {
     saveTokenBtn.textContent = 'Connect';
     saveTokenBtn.disabled = false;
@@ -100,16 +115,225 @@ async function verifyToken(token) {
     const res = await fetch(`${API_BASE}/photos.json`, {
       headers: { Authorization: `token ${token}` }
     });
-    // 200 = exists, 404 = repo accessible but file missing (also valid)
     return res.status === 200 || res.status === 404;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 function showSetupError(msg) {
   setupError.textContent = msg;
   setupError.classList.remove('hidden');
+}
+
+// ─── Import banner ────────────────────────────────────────────────────────────
+function maybeShowImportBanner() {
+  // Show once: if the user hasn't dismissed it and hasn't done a bulk import
+  const dismissed = localStorage.getItem('import_banner_dismissed');
+  const done      = localStorage.getItem('bulk_import_done');
+  if (!dismissed && !done) {
+    importBanner.classList.remove('hidden');
+  }
+}
+
+importDismissBtn.addEventListener('click', () => {
+  importBanner.classList.add('hidden');
+  localStorage.setItem('import_banner_dismissed', '1');
+});
+
+importAllBtn.addEventListener('click', () => {
+  importBanner.classList.add('hidden');
+  triggerBulkImport();
+});
+
+settingsImportBtn.addEventListener('click', () => {
+  closeSettings();
+  triggerBulkImport();
+});
+
+function triggerBulkImport() {
+  bulkFileInput.value = '';
+  bulkFileInput.click();
+}
+
+bulkFileInput.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  await runBulkImport(files);
+});
+
+// ─── Bulk import engine ───────────────────────────────────────────────────────
+async function runBulkImport(files) {
+  bulkCancelled = false;
+  isUploading = true;
+  addPhotoBtn.disabled = true;
+
+  // Show the full-screen progress overlay
+  bulkProgressScreen.classList.remove('hidden');
+  bulkFailedCount.classList.add('hidden');
+  bulkProgressSub.textContent = `Uploading to GitHub...`;
+  updateBulkProgress(0, files.length, 0);
+
+  let uploaded = 0;
+  let failed   = 0;
+  const failedNames = [];
+
+  // We batch photos.json updates — collect all filenames, write once at the end
+  // But we still need to upload images one by one (GitHub API rate limits)
+  const uploadedFilenames = [];
+
+  for (let i = 0; i < files.length; i++) {
+    if (bulkCancelled) break;
+
+    const file = files[i];
+    bulkCurrentFile.textContent = file.name;
+    updateBulkProgress(i, files.length, failed);
+
+    try {
+      const filename = await uploadImageOnly(file);
+      uploadedFilenames.push(filename);
+      uploaded++;
+    } catch (err) {
+      console.error('Bulk upload failed for', file.name, err);
+      failed++;
+      failedNames.push(file.name);
+    }
+
+    updateBulkProgress(i + 1, files.length, failed);
+  }
+
+  // Write all filenames to photos.json in one go
+  if (uploadedFilenames.length > 0) {
+    bulkProgressSub.textContent = 'Saving photo list...';
+    bulkCurrentFile.textContent = 'Updating photos.json';
+    try {
+      await appendToPhotosJson(uploadedFilenames);
+    } catch (err) {
+      console.error('Failed to update photos.json:', err);
+    }
+  }
+
+  // Done
+  isUploading = false;
+  addPhotoBtn.disabled = false;
+
+  if (bulkCancelled) {
+    bulkProgressScreen.classList.add('hidden');
+    if (uploaded > 0) {
+      showSuccess(`Cancelled — ${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded so far`);
+      await loadGallery();
+    }
+    return;
+  }
+
+  // Show completion state
+  bulkProgressSub.textContent = uploaded > 0
+    ? `Done! ${uploaded} photo${uploaded > 1 ? 's' : ''} synced to GitHub`
+    : 'No photos uploaded';
+  bulkCurrentFile.textContent = '';
+  updateBulkProgress(files.length, files.length, failed);
+
+  if (failed > 0) {
+    bulkFailedText.textContent = `${failed} failed — tap + to retry them`;
+    bulkFailedCount.classList.remove('hidden');
+  }
+
+  bulkCancelBtn.textContent = 'Done';
+  localStorage.setItem('bulk_import_done', '1');
+
+  await loadGallery();
+}
+
+function updateBulkProgress(done, total, failed) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  bulkProgressBar.style.width = `${pct}%`;
+  bulkCount.textContent  = `${done} / ${total}`;
+  bulkPercent.textContent = `${pct}%`;
+  if (failed > 0) {
+    bulkFailedText.textContent = `${failed} failed`;
+    bulkFailedCount.classList.remove('hidden');
+  }
+}
+
+bulkCancelBtn.addEventListener('click', () => {
+  if (isUploading) {
+    bulkCancelled = true;
+    bulkCancelBtn.textContent = 'Cancelling...';
+    bulkCancelBtn.disabled = true;
+  } else {
+    // "Done" state
+    bulkProgressScreen.classList.add('hidden');
+    bulkCancelBtn.textContent = 'Cancel';
+    bulkCancelBtn.disabled = false;
+  }
+});
+
+// Upload only the image file — returns the generated filename
+async function uploadImageOnly(file) {
+  const base64   = await fileToBase64(file);
+  const filename = generateFilename(file);
+
+  const res = await fetch(`${API_BASE}/photos/${filename}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${githubToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: `Bulk import: ${filename}`,
+      content: base64,
+      branch: GITHUB_BRANCH,
+    }),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `HTTP ${res.status}`);
+  }
+
+  return filename;
+}
+
+// Append a batch of filenames to photos.json in one API call
+async function appendToPhotosJson(newFilenames) {
+  let currentPhotos = [];
+  let fileSha = null;
+
+  try {
+    const res = await fetch(`${API_BASE}/photos.json`, {
+      headers: { Authorization: `token ${githubToken}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      fileSha = data.sha;
+      const decoded = atob(data.content.replace(/\n/g, ''));
+      currentPhotos = JSON.parse(decoded);
+    }
+  } catch { /* start fresh */ }
+
+  for (const name of newFilenames) {
+    if (!currentPhotos.includes(name)) currentPhotos.push(name);
+  }
+
+  const newContent = btoa(JSON.stringify(currentPhotos, null, 2));
+  const body = {
+    message: `Bulk import: add ${newFilenames.length} photos`,
+    content: newContent,
+    branch: GITHUB_BRANCH,
+  };
+  if (fileSha) body.sha = fileSha;
+
+  const res = await fetch(`${API_BASE}/photos.json`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${githubToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error('photos.json update failed: ' + (err.message || res.status));
+  }
 }
 
 // ─── Gallery loading ──────────────────────────────────────────────────────────
@@ -121,12 +345,10 @@ async function loadGallery() {
   try {
     const photos = await fetchPhotosList();
     loadingState.classList.add('hidden');
-
     if (photos.length === 0) {
       emptyState.classList.remove('hidden');
       return;
     }
-
     renderGallery(photos);
   } catch (err) {
     loadingState.classList.add('hidden');
@@ -145,11 +367,9 @@ async function fetchPhotosList() {
 
 function renderGallery(photos) {
   galleryGrid.innerHTML = '';
-  // Show newest first
   const reversed = [...photos].reverse();
   reversed.forEach((filename) => {
-    const item = createGalleryItem(filename);
-    galleryGrid.appendChild(item);
+    galleryGrid.appendChild(createGalleryItem(filename));
   });
 }
 
@@ -164,9 +384,7 @@ function createGalleryItem(filename) {
   img.decoding = 'async';
 
   img.addEventListener('click', () => openLightbox(img.src, filename));
-  img.addEventListener('error', () => {
-    div.classList.add('broken');
-  });
+  img.addEventListener('error', () => div.classList.add('broken'));
 
   div.appendChild(img);
   return div;
@@ -179,7 +397,7 @@ refreshBtn.addEventListener('click', async () => {
   setTimeout(() => refreshBtn.classList.remove('spinning'), 600);
 });
 
-// ─── Add Photo ────────────────────────────────────────────────────────────────
+// ─── Add Photo (single / small batch via FAB) ─────────────────────────────────
 addPhotoBtn.addEventListener('click', () => {
   if (isUploading) return;
   fileInput.value = '';
@@ -202,7 +420,6 @@ async function uploadFiles(files) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     showToast(`Uploading ${i + 1} of ${files.length}...`);
-
     try {
       await uploadFileToGitHub(file);
       uploaded++;
@@ -217,24 +434,18 @@ async function uploadFiles(files) {
   addPhotoBtn.disabled = false;
 
   if (uploaded > 0) {
-    showSuccess(
-      uploaded === 1
-        ? 'Photo uploaded to GitHub!'
-        : `${uploaded} photos uploaded to GitHub!`
-    );
+    showSuccess(uploaded === 1 ? 'Photo uploaded!' : `${uploaded} photos uploaded!`);
     await loadGallery();
   }
-
   if (failed > 0) {
     alert(`${failed} photo(s) failed to upload. Check your token and try again.`);
   }
 }
 
 async function uploadFileToGitHub(file) {
-  const base64 = await fileToBase64(file);
+  const base64   = await fileToBase64(file);
   const filename = generateFilename(file);
 
-  // 1. Upload the image file
   const uploadRes = await fetch(`${API_BASE}/photos/${filename}`, {
     method: 'PUT',
     headers: {
@@ -253,12 +464,10 @@ async function uploadFileToGitHub(file) {
     throw new Error(errData.message || `HTTP ${uploadRes.status}`);
   }
 
-  // 2. Update photos.json
   await updatePhotosJson(filename);
 }
 
 async function updatePhotosJson(newFilename) {
-  // Get current photos.json (need the SHA to update it)
   let currentPhotos = [];
   let fileSha = null;
 
@@ -266,24 +475,17 @@ async function updatePhotosJson(newFilename) {
     const res = await fetch(`${API_BASE}/photos.json`, {
       headers: { Authorization: `token ${githubToken}` },
     });
-
     if (res.ok) {
       const data = await res.json();
       fileSha = data.sha;
       const decoded = atob(data.content.replace(/\n/g, ''));
       currentPhotos = JSON.parse(decoded);
     }
-  } catch {
-    // photos.json doesn't exist yet — start fresh
-  }
+  } catch { /* start fresh */ }
 
-  // Add new filename (avoid duplicates)
-  if (!currentPhotos.includes(newFilename)) {
-    currentPhotos.push(newFilename);
-  }
+  if (!currentPhotos.includes(newFilename)) currentPhotos.push(newFilename);
 
   const newContent = btoa(JSON.stringify(currentPhotos, null, 2));
-
   const body = {
     message: `Update photos list: add ${newFilename}`,
     content: newContent,
@@ -306,24 +508,19 @@ async function updatePhotosJson(newFilename) {
   }
 }
 
-// ─── Utility: file → base64 ───────────────────────────────────────────────────
+// ─── Utilities ────────────────────────────────────────────────────────────────
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      // result is "data:image/jpeg;base64,XXXXX" — strip the prefix
-      const base64 = reader.result.split(',')[1];
-      resolve(base64);
-    };
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-// ─── Utility: generate unique filename ───────────────────────────────────────
 function generateFilename(file) {
-  const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
+  const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const ts   = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
   const rand = Math.random().toString(36).slice(2, 6);
   return `photo_${ts}_${rand}.${ext}`;
 }
@@ -342,7 +539,7 @@ function hideToast() {
 function showSuccess(msg) {
   successMsg.textContent = msg;
   successToast.classList.remove('hidden');
-  setTimeout(() => successToast.classList.add('hidden'), 3000);
+  setTimeout(() => successToast.classList.add('hidden'), 3500);
 }
 
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
@@ -354,13 +551,8 @@ function openLightbox(src, caption) {
 }
 
 lightboxClose.addEventListener('click', closeLightbox);
-lightbox.addEventListener('click', (e) => {
-  if (e.target === lightbox) closeLightbox();
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeLightbox();
-});
+lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
 function closeLightbox() {
   lightbox.classList.add('hidden');
@@ -372,9 +564,7 @@ function closeLightbox() {
 settingsBtn.addEventListener('click', () => {
   settingsSheet.classList.remove('hidden');
   settingsOverlay.classList.remove('hidden');
-  requestAnimationFrame(() => {
-    settingsSheet.classList.add('open');
-  });
+  requestAnimationFrame(() => settingsSheet.classList.add('open'));
 });
 
 function closeSettings() {
@@ -403,7 +593,7 @@ logoutBtn.addEventListener('click', () => {
   showSetup();
 });
 
-// ─── Pull to refresh (touch) ──────────────────────────────────────────────────
+// ─── Pull to refresh ──────────────────────────────────────────────────────────
 let touchStartY = 0;
 let isPulling = false;
 
@@ -413,8 +603,7 @@ document.addEventListener('touchstart', (e) => {
 
 document.addEventListener('touchend', async (e) => {
   const deltaY = e.changedTouches[0].clientY - touchStartY;
-  const atTop = window.scrollY === 0;
-
+  const atTop  = window.scrollY === 0;
   if (atTop && deltaY > 80 && !isUploading && !isPulling) {
     isPulling = true;
     refreshBtn.classList.add('spinning');
@@ -424,44 +613,36 @@ document.addEventListener('touchend', async (e) => {
   }
 }, { passive: true });
 
-// ─── Auto-refresh: poll for new photos every 30s when app is visible ──────────
+// ─── Auto-refresh: poll every 30s + on visibility change ──────────────────────
 let autoRefreshTimer = null;
 
 function startAutoRefresh() {
   stopAutoRefresh();
   autoRefreshTimer = setInterval(async () => {
-    if (!document.hidden && githubToken) {
+    if (!document.hidden && githubToken && !isUploading) {
       await silentRefresh();
     }
   }, 30000);
 }
 
 function stopAutoRefresh() {
-  if (autoRefreshTimer) {
-    clearInterval(autoRefreshTimer);
-    autoRefreshTimer = null;
-  }
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
 }
 
 async function silentRefresh() {
   try {
-    const photos = await fetchPhotosList();
-    const currentItems = galleryGrid.querySelectorAll('.gallery-item');
-    const currentCount = currentItems.length;
+    const photos       = await fetchPhotosList();
+    const currentCount = galleryGrid.querySelectorAll('.gallery-item').length;
     if (photos.length > currentCount) {
       renderGallery(photos);
-      showSuccess(`${photos.length - currentCount} new photo${photos.length - currentCount > 1 ? 's' : ''} synced`);
+      const diff = photos.length - currentCount;
+      showSuccess(`${diff} new photo${diff > 1 ? 's' : ''} synced`);
     }
-  } catch {
-    // silent — don't interrupt user
-  }
+  } catch { /* silent */ }
 }
 
-// Restart polling when app becomes visible again (user switches back)
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && githubToken) {
-    silentRefresh();
-  }
+  if (!document.hidden && githubToken && !isUploading) silentRefresh();
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

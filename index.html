@@ -90,6 +90,63 @@
       </div>
     </div>
 
+    <!-- First-launch bulk import banner -->
+    <div id="import-banner" class="import-banner hidden">
+      <div class="import-banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="import-banner-text">
+        <strong>Import existing photos</strong>
+        <span>Select all photos from your Camera Roll to sync them to GitHub</span>
+      </div>
+      <div class="import-banner-actions">
+        <button id="import-all-btn" class="btn-import">Import All</button>
+        <button id="import-dismiss-btn" class="btn-dismiss" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk import progress screen (shown during bulk upload) -->
+    <div id="bulk-progress-screen" class="bulk-progress-screen hidden">
+      <div class="bulk-progress-card">
+        <div class="bulk-progress-header">
+          <h2>Importing Photos</h2>
+          <p id="bulk-progress-subtitle">Uploading to GitHub...</p>
+        </div>
+
+        <div class="bulk-progress-bar-wrap">
+          <div id="bulk-progress-bar" class="bulk-progress-bar" style="width:0%"></div>
+        </div>
+
+        <div class="bulk-progress-stats">
+          <span id="bulk-count">0 / 0</span>
+          <span id="bulk-percent">0%</span>
+        </div>
+
+        <div id="bulk-current-file" class="bulk-current-file"></div>
+
+        <div class="bulk-progress-footer">
+          <div id="bulk-failed-count" class="bulk-failed hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
+              <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
+            </svg>
+            <span id="bulk-failed-text"></span>
+          </div>
+          <button id="bulk-cancel-btn" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Gallery area -->
     <main class="gallery-container">
       <div id="empty-state" class="empty-state hidden">
@@ -99,7 +156,7 @@
           <polyline points="21 15 16 10 5 21" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <p>No photos yet</p>
-        <p class="empty-hint">Tap the + button to add your first photo</p>
+        <p class="empty-hint">Tap + to add photos, or use the Import banner above</p>
       </div>
 
       <div id="loading-state" class="loading-state">
@@ -118,8 +175,9 @@
       </svg>
     </button>
 
-    <!-- Hidden file input -->
+    <!-- Hidden file inputs -->
     <input type="file" id="file-input" accept="image/*" multiple style="display:none" />
+    <input type="file" id="bulk-file-input" accept="image/*" multiple style="display:none" />
   </div>
 
   <!-- LIGHTBOX -->
@@ -139,6 +197,10 @@
   <div id="settings-sheet" class="bottom-sheet hidden">
     <div class="sheet-handle"></div>
     <h2>Settings</h2>
+    <div class="settings-item">
+      <span>Import all photos</span>
+      <button id="settings-import-btn" class="btn-secondary small">Import</button>
+    </div>
     <div class="settings-item">
       <span>GitHub Token</span>
       <button id="update-token-btn" class="btn-secondary small">Update</button>
