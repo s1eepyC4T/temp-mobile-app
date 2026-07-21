@@ -74,7 +74,7 @@ Option A — Using the Cloudflare Dashboard (easiest, no install needed):
 1. Go to https://dash.cloudflare.com/
 2. Left menu → **Workers & Pages** → **Create**
 3. Click **Create Worker**
-4. Name it: `photo-gallery-worker`
+4. Name it: `temp-mobile-app`
 5. Click **Deploy**
 6. Then click **Edit code**
 7. Delete everything in the editor
